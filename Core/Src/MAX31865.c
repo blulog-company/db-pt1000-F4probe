@@ -38,6 +38,65 @@
 #define RTD_A 3.9083e-3		//3.90830 x 10-3  wartosc a z PDF MAX...
 //#define RTD_A 0.00385			//				wartosc alfa z dokumentacji sondy pt1000
 #define RTD_B -5.775e-7		//=
+
+//#########################################################################################################################
+void send_text1_over_usb(const char *text, uint8_t TxBuffer[])
+{
+	uint8_t MessageLength;
+	strcpy(TxBuffer, text);
+	MessageLength = strlen(TxBuffer);
+	CDC_Transmit_FS(TxBuffer, MessageLength);
+	clear_buffer(TxBuffer);
+	HAL_Delay(100);
+}
+//#########################################################################################################################
+#pragma GCC push_options
+#pragma GCC optimize ("O3")
+void delayUS_DWT(uint32_t us)
+{
+	/*
+	strcpy(DataToSend1, "delayUS_DWT znacznik1 \r\n");
+	CDC_Transmit_FS(DataToSend1, strlen(DataToSend1));
+	clear_buffer_(DataToSend1);
+
+	HAL_Delay(100);
+	sprintf(DataToSend1, "us, argument: %i \r\n", us);
+	CDC_Transmit_FS(DataToSend1, strlen(DataToSend1));
+	clear_buffer_(DataToSend1);
+
+	HAL_Delay(100);
+	sprintf(DataToSend1, "SystemCoreClock: %i \r\n", SystemCoreClock);
+	CDC_Transmit_FS(DataToSend1, strlen(DataToSend1));
+	clear_buffer_(DataToSend1);
+	*/
+	volatile uint32_t cycles = (SystemCoreClock/1000000L)*us;
+	/*
+	HAL_Delay(100);
+	sprintf(DataToSend1, "cycles: %i \r\n", cycles);
+	CDC_Transmit_FS(DataToSend1, strlen(DataToSend1));
+	clear_buffer_(DataToSend1);
+	*/
+	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+	DWT->CTRL |= 1 ; // enable the counter
+	DWT->CYCCNT = 0; // reset the counter
+	volatile uint32_t start = DWT->CYCCNT;
+	/*
+	HAL_Delay(100);
+	sprintf(DataToSend1, "start: %i \r\n", start);
+	CDC_Transmit_FS(DataToSend1, strlen(DataToSend1));
+	clear_buffer_(DataToSend1);
+	*/
+	do
+	{
+		//send_text1_over_usb("delayUS_DWT while \r\n", DataToSend1);
+		/*
+		HAL_Delay(50);
+		sprintf(DataToSend1, "DWT->CYCCNT - start: %i \r\n", DWT->CYCCNT - start);
+		CDC_Transmit_FS(DataToSend1, strlen(DataToSend1));
+		*/
+	} while(DWT->CYCCNT - start < cycles);
+}
+#pragma GCC pop_options
 //#########################################################################################################################
 void  Max31865_delay(uint32_t delay_ms)
 {
@@ -143,13 +202,19 @@ void Max31865_setFilter(Max31865_t *max31865, uint8_t filterHz)
 //#########################################################################################################################
 uint16_t Max31865_readRTD (Max31865_t *max31865)
 {
+	//send_text1_over_usb("readRTD \r\n", DataToSend1);
 	Max31865_clearFault(max31865);
 	Max31865_enableBias(max31865, 1);
+	//send_text1_over_usb("readRTD znacznik1 \r\n", DataToSend1);
 	//Max31865_delay(10);
+	delayUS_DWT(10000);
+	//send_text1_over_usb("readRTD znacznik2 \r\n", DataToSend1);
 	uint8_t t = Max31865_readRegister8(max31865, MAX31856_CONFIG_REG);
 	t |= MAX31856_CONFIG_1SHOT;
 	Max31865_writeRegister8(max31865, MAX31856_CONFIG_REG, t);
+	//send_text1_over_usb("readRTD znacznik3 \r\n", DataToSend1);
 	//Max31865_delay(65);
+	delayUS_DWT(65000);
 	uint16_t rtd = Max31865_readRegister16(max31865, MAX31856_RTDMSB_REG);
 	rtd >>= 1;
 	return rtd;
@@ -177,11 +242,13 @@ void  Max31865_init(Max31865_t *max31865,SPI_HandleTypeDef *spi,GPIO_TypeDef  *c
 //#########################################################################################################################
 bool Max31865_readTempC(Max31865_t *max31865,float *readTemp)
 {
-  if(max31865->lock == 1)
-    Max31865_delay(1);
-  max31865->lock = 1;
-  bool isOk = false;
-  float Z1, Z2, Z3, Z4, Rt, temp;
+
+	//send_text1_over_usb("readTempC \r\n", DataToSend1);
+	if(max31865->lock == 1)
+		Max31865_delay(1);
+	max31865->lock = 1;
+	bool isOk = false;
+	float Z1, Z2, Z3, Z4, Rt, temp;
 	Rt = Max31865_readRTD(max31865);
 	Rt /= 32768;
 	Rt *= _MAX31865_RREF;
@@ -193,13 +260,13 @@ bool Max31865_readTempC(Max31865_t *max31865,float *readTemp)
 	temp = (sqrtf(temp) + Z1) / Z4;
 
 	if (temp >= 0)
-  {
-    *readTemp = temp; 
-    if(Max31865_readFault(max31865) == 0)
-      isOk = true;        
-    max31865->lock = 0;
-    return isOk;
-  }
+	{
+		*readTemp = temp;
+		if(Max31865_readFault(max31865) == 0)
+			isOk = true;
+		max31865->lock = 0;
+		return isOk;
+	}
 	Rt /= _MAX31865_RNOMINAL;
 	Rt *= 100;    
 	float rpoly = Rt;
@@ -214,11 +281,11 @@ bool Max31865_readTempC(Max31865_t *max31865,float *readTemp)
 	rpoly *= Rt;  // ^5
 	temp += 1.5243e-10 * rpoly;
 
-  *readTemp = temp; 
-  if(Max31865_readFault(max31865) == 0)
-    isOk = true;        
-  max31865->lock = 0;
-  return isOk;  
+	*readTemp = temp;
+	if(Max31865_readFault(max31865) == 0)
+	isOk = true;
+	max31865->lock = 0;
+	return isOk;
 }
 //#########################################################################################################################
 bool  Max31865_readTempF(Max31865_t *max31865,float *readTemp)

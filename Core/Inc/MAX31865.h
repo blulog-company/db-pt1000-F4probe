@@ -24,6 +24,7 @@
 #include "gpio.h"
 #include "spi.h"
 #include <stdbool.h>
+#include "usb_device.h"
 //#########################################################################################################################
 typedef struct
 {
@@ -33,7 +34,10 @@ typedef struct
   uint8_t           lock;
   
 }Max31865_t;
+uint8_t DataToSend1[40];
 //#########################################################################################################################
+void delayUS_DWT(uint32_t us);
+void send_text1_over_usb(const char *text, uint8_t TxBuffer[]);
 void  Max31865_init(Max31865_t *max31865,SPI_HandleTypeDef *spi,GPIO_TypeDef  *cs_gpio,uint16_t cs_pin,uint8_t  numwires, uint8_t filterHz);
 bool  Max31865_readTempC(Max31865_t *max31865,float *readTemp);
 bool  Max31865_readTempF(Max31865_t *max31865,float *readTemp);

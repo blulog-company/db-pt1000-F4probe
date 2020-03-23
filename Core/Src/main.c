@@ -67,6 +67,7 @@ uint16_t period;
 uint16_t frame_CRC;
 
 uint8_t temp_ready;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -114,6 +115,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		temp_ready = 1;
 		licznik_pomiarow++;
 
+	}
+}
+
+
+
+void LED_Blink()
+{
+	while(1)
+	{
+		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
+		delayUS_DWT(1000000L);
 	}
 }
 
@@ -166,6 +178,8 @@ int main(void)
 	HAL_Delay(200);
 	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
 
+	//LED_Blink();
+
 	Max31865_init(&pt1000 ,&hspi1, SENSOR_CS1_GPIO_Port, SENSOR_CS1_Pin, SENSOR_Connection_2Wire, SENSOR_Frequency_Filter);
 	HAL_Delay(3000);
 	uint8_t initial_state_flag = 1;
@@ -177,6 +191,8 @@ int main(void)
 	frame_initializer();
 	frame_rewrite();
 
+	send_text_over_usb("main znacznik 1 \r\n", DataToSend);
+
 	for(int i = 0; i < 75; i++)
 	{
 		pt1000isOK = Max31865_readTempC(&pt1000,&t);
@@ -186,6 +202,7 @@ int main(void)
 		sprintf(DataToSend, "pomiar: %f \r\n", pt1000Temp);
 		CDC_Transmit_FS(DataToSend, strlen(DataToSend));
 	}
+	send_text_over_usb("koniec inicjalizacji \r\n", DataToSend);
 
 	HAL_Delay(200);
 	HAL_TIM_Base_Start_IT(&htim14);
