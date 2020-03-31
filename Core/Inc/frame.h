@@ -49,7 +49,7 @@ struct frame
 	uint8_t LQI;
 
 	uint8_t whole_frame[33];
-	uint8_t CRC_buffer[18];
+	uint8_t CRC_buffer[14];
 
 } my_frame;
 

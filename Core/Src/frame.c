@@ -229,6 +229,10 @@ uint16_t culCalcCRC(uint8_t crcData, uint16_t crcReg)
 
 void frame_initializer()
 {
+	//ramka z pdf-a
+//001F425342531877068B23300811001500010086E16B59FF030058029BA8CE0000- to jest mój rezultat crc dla tej ramki
+//001F425342531877068B230380110051001000681EB695FF30008520B9D9B06BB2
+
 	my_frame.length_of_received_data[0] = 0x00;	//stałe
 	my_frame.length_of_received_data[1] = 0x1F;
 	//Proper frame
@@ -259,12 +263,58 @@ void frame_initializer()
 	my_frame.temperatures[2] = 0x00;
 	my_frame.time_of_period[0] = 0x58;	//rzutuję w mainie
 	my_frame.time_of_period[1] = 0x02;
-	my_frame.battery_voltage = 0x9B;	//wstawiam zero
-	my_frame._CRC[0] = 0x2E;
-	my_frame._CRC[1] = 0x42;
+	my_frame.battery_voltage = 0x00;	//wstawiam zero
+	my_frame._CRC[0] = 0x00;
+	my_frame._CRC[1] = 0x00;
 	//Additional
 	my_frame.RSSI = 0x00;	//wstawiam zero
 	my_frame.LQI = 0x00;	//wstawiam zero
+
+	//Testowa ramka z gotowego urządzenia
+//jU0A_001F_42534253_18_99190020_30081100_11F6_685E_EFF00EEF_F00EEF_F00E_1E_67D6_C9_1F;
+//jU0A001F4253425318991900203008110011F6685EEFF00EEFF00EEFF00E1E67D6C91F
+    //001F4253425318991900203008110011F6685EEFF00EEFF00EEFF00E1E297EC91F	//wyznaczone przeze mnie
+	  																		//jest różnica w CRC
+/*
+
+	my_frame.length_of_received_data[0] = 0x00;	//stałe
+	my_frame.length_of_received_data[1] = 0x1F;
+	//Proper frame
+	my_frame.synchronization_word[0] = 0x42;	//stałe
+	my_frame.synchronization_word[1] = 0x53;
+	my_frame.synchronization_word[2] = 0x42;
+	my_frame.synchronization_word[3] = 0x53;
+	my_frame.length_of_frame = 0x18;	//stałe
+	my_frame.ID[0] = 0x99;		//stałe dla egzemplarza
+	my_frame.ID[1] = 0x19;
+	my_frame.ID[2] = 0x00;
+	my_frame.ID[3] = 0x20;
+	my_frame.info_bits[0] = 0x30;	// zostawiam jak jest
+	my_frame.info_bits[1] = 0x08;
+	my_frame.info_bits[2] = 0x11;
+	my_frame.info_bits[3] = 0x00;
+	//Data
+	my_frame.VID[0] = 0x11;		//stałe
+	my_frame.VID[1] = 0xF6;
+	my_frame.PID[0] = 0x68;		//stałe
+	my_frame.PID[1] = 0x5E;
+	my_frame.time_clock[0] = 0xEF;		//licznik pomiarów, rzutuję w mainie
+	my_frame.time_clock[1] = 0xF0;
+	my_frame.time_clock[2] = 0x0E;
+	my_frame.time_clock[3] = 0xEF;
+	my_frame.temperatures[0] = 0xF0;
+	my_frame.temperatures[1] = 0x0E;
+	my_frame.temperatures[2] = 0xEF;
+	my_frame.time_of_period[0] = 0xF0;	//rzutuję w mainie
+	my_frame.time_of_period[1] = 0x0E;
+	my_frame.battery_voltage = 0x1E;	//wstawiam zero
+	my_frame._CRC[0] = 0x00;
+	my_frame._CRC[1] = 0x00;
+	//Additional
+	my_frame.RSSI = 0xC9;	//wstawiam zero
+	my_frame.LQI = 0x1F;	//wstawiam zero
+	*/
+
 
 
 }
@@ -335,9 +385,9 @@ void cast_period(uint16_t period)
 
 void fill_CRC_buffer()
 {
-	for(int i = 0; i < 18; i++)
+	for(int i = 0; i < 14; i++)
 	{
-		my_frame.CRC_buffer[i] = my_frame.whole_frame[i+11];
+		my_frame.CRC_buffer[i] = my_frame.whole_frame[i+15];
 	}
 }
 

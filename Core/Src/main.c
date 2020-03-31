@@ -243,7 +243,7 @@ int main(void)
 			cast_temperature();
 			frame_rewrite();
 			fill_CRC_buffer();
-			frame_CRC = crc16(my_frame.CRC_buffer, 18);
+			frame_CRC = crc16(my_frame.CRC_buffer, 14);
 			cast_CRC(frame_CRC);
 			frame_rewrite();
 
