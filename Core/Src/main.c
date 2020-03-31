@@ -101,7 +101,7 @@ void usb_print(const char *text, uint8_t TxBuffer[])
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	if (htim->Instance == TIM7)
+	if (htim->Instance == TIM14)
 	{
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
 
@@ -134,6 +134,14 @@ void LED_Blink()
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+static int j = 0;
+
+unsigned char __attribute__((section (".mySection"))) buf[4] = {1,2,3,4};
+//unsigned char __attribute__((section (".mySection"))) myOtherVar = 0x1A;
+
+extern int __MY_SECTION_START, __MY_SECTION_END;
+
+
 /* USER CODE END 0 */
 
 /**
@@ -143,6 +151,10 @@ void LED_Blink()
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	uint16_t test_variable = 0x31EA;
+	uint16_t test2 = test_variable + 1;
+
+	uint8_t *p, *end;
 
   /* USER CODE END 1 */
 
@@ -179,6 +191,7 @@ int main(void)
 	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
 
 	//LED_Blink();
+	send_text_over_usb(buf, DataToSend);
 
 	Max31865_init(&pt1000 ,&hspi1, SENSOR_CS1_GPIO_Port, SENSOR_CS1_Pin, SENSOR_Connection_2Wire, SENSOR_Frequency_Filter);
 	HAL_Delay(3000);
