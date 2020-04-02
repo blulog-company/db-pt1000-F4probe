@@ -13,11 +13,17 @@
 
 #define CRC16_POLY 0x8005
 #define CRC_INIT 0xFFFF
-#define DATABASE_NUMBER_OF_TEMPERATURES								2
+#define DATABASE_NUMBER_OF_TEMPERATURES							2
 #define DATABASE_NUMBER_OF_TEMPERATURES_BYTES					3
+#define BIG_DATABASE_NUMBER_OF_TEMPERATURES								6
+#define BIG_DATABASE_NUMBER_OF_TEMPERATURES_BYTES						9
 uint8_t database_temperatures_bytes[DATABASE_NUMBER_OF_TEMPERATURES_BYTES];
 uint16_t database_temperatures_index;		/* 0 means that next measurement will be stored at address 0 */
+uint8_t BIG_database_temperatures_bytes[BIG_DATABASE_NUMBER_OF_TEMPERATURES_BYTES];
+uint16_t BIG_database_temperatures_index;		/* 0 means that next measurement will be stored at address 0 */
 uint8_t shift_left_order;
+#define liczba_pomiarow_w_ramce 6
+float pomiary_shift_register[liczba_pomiarow_w_ramce];
 
 void database_temperature_history_store(float temperature);
 void database_temperature_history_shift_left(void);
@@ -27,6 +33,10 @@ void fToTwelveBits(float measurement, uint8_t *twelveBitsMeasurement, uint8_t *n
 void iToTwelveBits(int measurement, uint8_t *twelveBitsMeasurement, uint8_t *numOfMeasurement);
 
 void clear_buffer_(char buffer[]);
+void shift_register_init();
+void shift_register_add(float new);
+void big_database_temperature_history_store(float temperature);
+void clear_BIG_database();
 
 struct frame
 {

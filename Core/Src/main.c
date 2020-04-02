@@ -57,8 +57,11 @@
 uint8_t DataToSend[40]; // Tablica zawierajaca dane do wyslania
 Max31865_t  pt1000;
 bool        pt1000isOK;
-float       pt1000Temp;
-float t;
+float       pt1000Temp;		//po przefiltrowaniu
+float t;					//surowy odczyt z sensora
+float newTemp;
+float oldTemp;
+
 
 char whole_frame_ascii[300];
 char one_hex_number[4];
@@ -196,13 +199,34 @@ int main(void)
 	Max31865_init(&pt1000 ,&hspi1, SENSOR_CS1_GPIO_Port, SENSOR_CS1_Pin, SENSOR_Connection_2Wire, SENSOR_Frequency_Filter);
 	HAL_Delay(3000);
 	uint8_t initial_state_flag = 1;
-	uint8_t counter = 0;
 	licznik_pomiarow = 0;
 	period = 5;
 	frame_CRC = 0;
 	temp_ready = 0;
 	frame_initializer();
 	frame_rewrite();
+	newTemp = 0.0;
+	oldTemp = 0.0;
+	shift_register_init();
+
+	shift_register_add(50.0);
+	shift_register_add(75.0);
+	shift_register_add(171.5);
+	shift_register_add(123.3);
+	shift_register_add(184.5);
+	shift_register_add(142.2);	//najnowszy pomiar
+
+	for(int i = 0; i < liczba_pomiarow_w_ramce; i++)
+	{
+		big_database_temperature_history_store(pomiary_shift_register[i]);
+	}
+
+	shift_register_add(67.6);
+	clear_BIG_database();
+	for(int i = 0; i < liczba_pomiarow_w_ramce; i++)
+	{
+		big_database_temperature_history_store(pomiary_shift_register[i]);
+	}
 
 	send_text_over_usb("main znacznik 1 \r\n", DataToSend);
 
@@ -236,8 +260,11 @@ int main(void)
 			pt1000Temp = Max31865_Filter(t,pt1000Temp,0.1);   //  << For Smoothing data
 			sprintf(DataToSend, "pomiar: %f \r\n", pt1000Temp);
 			CDC_Transmit_FS(DataToSend, strlen(DataToSend));
+			newTemp = pt1000Temp;
 
-			database_temperature_history_store(pt1000Temp);
+			//database_temperature_history_store(pt1000Temp);
+			database_temperature_history_store(newTemp);
+			database_temperature_history_store(oldTemp);
 			cast_counter(licznik_pomiarow);
 			cast_period(period);
 			cast_temperature();
@@ -245,7 +272,7 @@ int main(void)
 			fill_CRC_buffer();
 			frame_CRC = crc16(my_frame.CRC_buffer, 14);
 			cast_CRC(frame_CRC);
-			frame_rewrite();
+			frame_rewrite();;
 
 			strcat(whole_frame_ascii,"JU0A");
 			for(int i = 0; i < 33; i++)
@@ -262,6 +289,13 @@ int main(void)
 			CDC_Transmit_FS(whole_frame_ascii, strlen(whole_frame_ascii));
 			clear_buffer_(whole_frame_ascii);
 
+			if(shift_left_order)
+			{
+				database_temperature_history_shift_left();
+				shift_left_order = 0;
+			}
+
+			oldTemp = newTemp;
 			temp_ready = 0;
 		}
 		HAL_Delay(50);

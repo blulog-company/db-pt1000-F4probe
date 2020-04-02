@@ -9,6 +9,50 @@ void clear_buffer_(char buffer[])
 	}
 }
 
+void shift_register_init()
+{
+	for(int i = 0; i < liczba_pomiarow_w_ramce; i++)
+	{
+		pomiary_shift_register[i] = 0.0;
+	}
+}
+
+void shift_register_add(float new)	//przesuniecie w prawo
+{
+	for(int i = liczba_pomiarow_w_ramce - 1; i > 0; i--)
+	{
+		pomiary_shift_register[i] = pomiary_shift_register[i-1];
+	}
+	pomiary_shift_register[0] = new;
+}
+
+void clear_BIG_database()
+{
+	for(int i = 0; i < BIG_DATABASE_NUMBER_OF_TEMPERATURES_BYTES; i++)
+	{
+		BIG_database_temperatures_bytes[i] = 0;
+	}
+}
+
+void big_database_temperature_history_store(float temperature)
+{
+
+	fToTwelveBits(temperature, BIG_database_temperatures_bytes, &BIG_database_temperatures_index);
+
+			//NARAZIE ZROBIE BEZ PRZEPELNIANIA
+	if(BIG_database_temperatures_index > BIG_DATABASE_NUMBER_OF_TEMPERATURES - 1)
+	{
+		BIG_database_temperatures_index = 0;
+		/*
+		database_temperatures_index--;
+		//database_temperature_history_shift_left();
+		shift_left_order = 1;
+		*/
+	}
+	//else database_temperatures_index++;	//inkrementacja indeksu
+
+}
+
 void database_temperature_history_store(float temperature)
 {
 	/*
@@ -187,7 +231,7 @@ void iToTwelveBits(int measurement, uint8_t *twelveBitsMeasurement, uint8_t *num
 
 
     }
-//    *numOfMeasurement += 1;
+    *numOfMeasurement += 1;
     HAL_Delay(100);
 	strcpy(DataToPrint, " iToTwelveBits-bufor-temperatury:  ");
 	CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
