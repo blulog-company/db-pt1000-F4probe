@@ -63,6 +63,32 @@ struct frame
 
 } my_frame;
 
+struct BIG_frame
+{
+	uint8_t length_of_received_data[2];
+	//Proper frame
+	uint8_t synchronization_word[4];
+	uint8_t length_of_frame;
+	uint8_t ID[4];
+	uint8_t info_bits[4];
+	//Data
+	uint8_t VID[2];
+	uint8_t PID[2];
+	uint8_t time_clock[4];
+	uint8_t temperatures[BIG_DATABASE_NUMBER_OF_TEMPERATURES_BYTES];
+	uint8_t time_of_period[2];
+	uint8_t battery_voltage;
+	uint8_t _CRC[2];
+	//Additional
+	uint8_t RSSI;
+	uint8_t LQI;
+
+	uint8_t whole_frame[39];
+	uint8_t CRC_buffer[20];
+
+} myBIG_frame;
+
+
 
 
 void frame_initializer();
@@ -70,7 +96,11 @@ void cast_counter(uint32_t counter);
 void fill_CRC_buffer();
 void cast_CRC(uint16_t calculated_CRC);
 
-
+void BIG_frame_initializer();
+void BIG_fill_CRC_buffer();
+void BIG_fill_CRC_buffer();
+void BIG_cast_CRC(uint16_t calculated_CRC);
+void BIG_cast_period(uint16_t period);
 
 
 

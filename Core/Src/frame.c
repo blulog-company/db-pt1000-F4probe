@@ -3,7 +3,15 @@ uint8_t DataToPrint[40];
 
 void clear_buffer_(char buffer[])
 {
-	for(int i = 0; i < strlen(buffer); i++)
+	for(int i = 0; i < 300; i++)
+	{
+		buffer[i] = 0;
+	}
+}
+
+void clear_buffer_len(char buffer[], int len)
+{
+	for(int i = 0; i < len; i++)
 	{
 		buffer[i] = 0;
 	}
@@ -49,7 +57,7 @@ void big_database_temperature_history_store(float temperature)
 		shift_left_order = 1;
 		*/
 	}
-	//else database_temperatures_index++;	//inkrementacja indeksu
+	else BIG_database_temperatures_index++;	//inkrementacja indeksu
 
 }
 
@@ -148,10 +156,12 @@ void fToTwelveBits(float measurement, uint8_t *twelveBitsMeasurement, uint8_t *n
 }
 
 void iToTwelveBits(int measurement, uint8_t *twelveBitsMeasurement, uint8_t *numOfMeasurement) {
+	/*
 	HAL_Delay(100);
 	strcpy(DataToPrint, " iToTwelveBits:  ");
 	CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
 	clear_buffer_(DataToPrint);
+	*/
 
 	//t1 to jest zasadniczo ten pomiar co wchodzi.
 	//tu go tylko ograniczam do 11 bitów, ale przy tych liczbach to nie powinno mieć znaczenia
@@ -160,7 +170,7 @@ void iToTwelveBits(int measurement, uint8_t *twelveBitsMeasurement, uint8_t *num
     HAL_Delay(100);
     sprintf(DataToPrint, " t1: %i", t1);
 	CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
-	clear_buffer_(DataToPrint);
+	clear_buffer_len(DataToPrint, 40);
 
     /* Set bit 12 for "-" values */
 	//Dla ujemnych wartosci
@@ -169,28 +179,33 @@ void iToTwelveBits(int measurement, uint8_t *twelveBitsMeasurement, uint8_t *num
         t1 = t1 | 0x0800;
     }
 
+    /*
     HAL_Delay(100);
 	sprintf(DataToPrint, " *numOfMeasurement: %i", *numOfMeasurement);
 	CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
 	clear_buffer_(DataToPrint);
+	*/
 
     int p = ((*numOfMeasurement)) * 1.5;
 
     HAL_Delay(100);
 	sprintf(DataToPrint, " p: %i", p);
 	CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
-	clear_buffer_(DataToPrint);
+	clear_buffer_len(DataToPrint, 40);
 
     if (*numOfMeasurement % 2 == 0)
     {
+    	/*
     	HAL_Delay(100);
 		strcpy(DataToPrint, " *numOfM parzyste ");
 		CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
 		clear_buffer_(DataToPrint);
+		*/
 
         twelveBitsMeasurement[p] = t1 & 0xFF;			//do wektora w indeks p wrzucam prawe 8 bitów
         twelveBitsMeasurement[p + 1] = t1 >> 8 & 0x0F;	//do indeksu p+1 ląduje lewe 8 bitów
 
+        /*
         HAL_Delay(100);
 		sprintf(DataToPrint, " twelveBitsMeasurement[p]: %i ", twelveBitsMeasurement[p]);
 		CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
@@ -200,17 +215,18 @@ void iToTwelveBits(int measurement, uint8_t *twelveBitsMeasurement, uint8_t *num
 		sprintf(DataToPrint, " twelveBitsMeasurement[p+1]: %i ", twelveBitsMeasurement[p+1]);
 		CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
 		clear_buffer_(DataToPrint);
+		*/
 
 
     }
     else
     {
-
+    	/*
     	HAL_Delay(100);
 		strcpy(DataToPrint, " *numOfM nieparzyste ");
 		CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
 		clear_buffer_(DataToPrint);
-
+		*/
         p += .5;
         uint8_t temp = twelveBitsMeasurement[p];
         temp = temp | ((t1 & 0x0F) << 4);
@@ -218,6 +234,7 @@ void iToTwelveBits(int measurement, uint8_t *twelveBitsMeasurement, uint8_t *num
         twelveBitsMeasurement[p] = temp;
         twelveBitsMeasurement[p + 1] = temp2;
 
+        /*
         HAL_Delay(100);
 		sprintf(DataToPrint, " twelveBitsMeasurement[p]: %i ", twelveBitsMeasurement[p]);
 		CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
@@ -227,11 +244,11 @@ void iToTwelveBits(int measurement, uint8_t *twelveBitsMeasurement, uint8_t *num
 		sprintf(DataToPrint, " twelveBitsMeasurement[p+1]: %i ", twelveBitsMeasurement[p+1]);
 		CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
 		clear_buffer_(DataToPrint);
-
+		*/
 
 
     }
-    *numOfMeasurement += 1;
+    //*numOfMeasurement += 1;
     HAL_Delay(100);
 	strcpy(DataToPrint, " iToTwelveBits-bufor-temperatury:  ");
 	CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
@@ -452,3 +469,145 @@ void cast_temperature()
 	}
 }
 
+
+
+void BIG_frame_initializer()
+{
+	myBIG_frame.length_of_received_data[0] = 0x00;	//stałe
+	myBIG_frame.length_of_received_data[1] = 0x1E;
+	//Proper frame
+	myBIG_frame.synchronization_word[0] = 0x42;	//stałe
+	myBIG_frame.synchronization_word[1] = 0x53;
+	myBIG_frame.synchronization_word[2] = 0x42;
+	myBIG_frame.synchronization_word[3] = 0x53;
+	myBIG_frame.length_of_frame = 0x18;	//stałe
+	myBIG_frame.ID[0] = 0x77;		//stałe dla egzemplarza
+	myBIG_frame.ID[1] = 0x06;
+	myBIG_frame.ID[2] = 0x8B;
+	myBIG_frame.ID[3] = 0x23;
+	myBIG_frame.info_bits[0] = 0x35;	// zostawiam jak jest
+	myBIG_frame.info_bits[1] = 0x08;
+	myBIG_frame.info_bits[2] = 0x11;
+	myBIG_frame.info_bits[3] = 0x00;
+	//Data
+	myBIG_frame.VID[0] = 0x15;		//stałe
+	myBIG_frame.VID[1] = 0x00;
+	myBIG_frame.PID[0] = 0x02;		//stałe
+	myBIG_frame.PID[1] = 0x00;
+	myBIG_frame.time_clock[0] = 0x86;		//licznik pomiarów, rzutuję w mainie
+	myBIG_frame.time_clock[1] = 0xE1;
+	myBIG_frame.time_clock[2] = 0x6B;
+	myBIG_frame.time_clock[3] = 0x59;
+	myBIG_frame.temperatures[0] = 0xFF;
+	myBIG_frame.temperatures[1] = 0x03;
+	myBIG_frame.temperatures[2] = 0x00;
+	myBIG_frame.temperatures[3] = 0xFF;
+	myBIG_frame.temperatures[4] = 0x03;
+	myBIG_frame.temperatures[5] = 0x00;
+	myBIG_frame.temperatures[6] = 0xFF;
+	myBIG_frame.temperatures[7] = 0x03;
+	myBIG_frame.temperatures[8] = 0x00;
+	myBIG_frame.time_of_period[0] = 0x58;	//rzutuję w mainie
+	myBIG_frame.time_of_period[1] = 0x02;
+	myBIG_frame.battery_voltage = 0x00;	//wstawiam zero
+	myBIG_frame._CRC[0] = 0x00;
+	myBIG_frame._CRC[1] = 0x00;
+	//Additional
+	myBIG_frame.RSSI = 0x00;	//wstawiam zero
+	myBIG_frame.LQI = 0x00;	//wstawiam zero
+}
+
+void BIG_fill_CRC_buffer()
+{
+	for(int i = 0; i < 20; i++)
+	{
+		myBIG_frame.CRC_buffer[i] = myBIG_frame.whole_frame[i+15];
+	}
+}
+
+void BIG_cast_temperature()
+{
+	for(int i = 0; i < BIG_DATABASE_NUMBER_OF_TEMPERATURES_BYTES; i++)
+	{
+		myBIG_frame.temperatures[i] = BIG_database_temperatures_bytes[i];
+	}
+}
+
+void BIG_cast_counter(uint32_t counter)
+{
+	uint8_t buffer8 = 0;
+	buffer8 = (uint8_t)(counter >> 24);	//najbardziej znaczący Bajt
+	myBIG_frame.time_clock[0] = buffer8;
+	buffer8 = (uint8_t)(counter >> 16);
+	myBIG_frame.time_clock[1] = buffer8;
+	buffer8 = (uint8_t)(counter >> 8);
+	myBIG_frame.time_clock[2] = buffer8;
+	buffer8 = (uint8_t)(counter);
+	myBIG_frame.time_clock[3] = buffer8;
+
+}
+
+void BIG_cast_CRC(uint16_t calculated_CRC)
+{
+	uint8_t buffer8 = 0;
+	buffer8 = (uint8_t)(calculated_CRC >> 8);
+	myBIG_frame._CRC[0] = buffer8;
+	buffer8 = (uint8_t)(calculated_CRC);
+	myBIG_frame._CRC[1] = buffer8;
+}
+
+void BIG_cast_period(uint16_t period)
+{
+	uint8_t buffer8 = 0;
+	buffer8 = (uint8_t)(period >> 8);
+	myBIG_frame.time_of_period[0] = buffer8;
+	buffer8 = (uint8_t)(period);
+	myBIG_frame.time_of_period[1] = buffer8;
+}
+
+void BIG_frame_rewrite()
+{
+	myBIG_frame.whole_frame[0] = myBIG_frame.length_of_received_data[0];
+	myBIG_frame.whole_frame[1] = myBIG_frame.length_of_received_data[1];
+	//Proper frame
+	myBIG_frame.whole_frame[2] = myBIG_frame.synchronization_word[0];
+	myBIG_frame.whole_frame[3] = myBIG_frame.synchronization_word[1];
+	myBIG_frame.whole_frame[4] = myBIG_frame.synchronization_word[2];
+	myBIG_frame.whole_frame[5] = myBIG_frame.synchronization_word[3];
+	myBIG_frame.whole_frame[6] = myBIG_frame.length_of_frame;
+	myBIG_frame.whole_frame[7] = myBIG_frame.ID[0];
+	myBIG_frame.whole_frame[8] = myBIG_frame.ID[1];
+	myBIG_frame.whole_frame[9] = myBIG_frame.ID[2];
+	myBIG_frame.whole_frame[10] = myBIG_frame.ID[3];
+	myBIG_frame.whole_frame[11] = myBIG_frame.info_bits[0];
+	myBIG_frame.whole_frame[12] = myBIG_frame.info_bits[1];
+	myBIG_frame.whole_frame[13] = myBIG_frame.info_bits[2];
+	myBIG_frame.whole_frame[14] = myBIG_frame.info_bits[3];
+	//Data
+	myBIG_frame.whole_frame[15] = myBIG_frame.VID[0];
+	myBIG_frame.whole_frame[16] = myBIG_frame.VID[1];
+	myBIG_frame.whole_frame[17] = myBIG_frame.PID[0];
+	myBIG_frame.whole_frame[18] = myBIG_frame.PID[1];
+	myBIG_frame.whole_frame[19] = myBIG_frame.time_clock[0];
+	myBIG_frame.whole_frame[20] = myBIG_frame.time_clock[1];
+	myBIG_frame.whole_frame[21] = myBIG_frame.time_clock[2];
+	myBIG_frame.whole_frame[22] = myBIG_frame.time_clock[3];
+	myBIG_frame.whole_frame[23] = myBIG_frame.temperatures[0];
+	myBIG_frame.whole_frame[24] = myBIG_frame.temperatures[1];
+	myBIG_frame.whole_frame[25] = myBIG_frame.temperatures[2];
+	myBIG_frame.whole_frame[26] = myBIG_frame.temperatures[3];
+	myBIG_frame.whole_frame[27] = myBIG_frame.temperatures[4];
+	myBIG_frame.whole_frame[28] = myBIG_frame.temperatures[5];
+	myBIG_frame.whole_frame[29] = myBIG_frame.temperatures[6];
+	myBIG_frame.whole_frame[30] = myBIG_frame.temperatures[7];
+	myBIG_frame.whole_frame[31] = myBIG_frame.temperatures[8];
+	myBIG_frame.whole_frame[32] = myBIG_frame.time_of_period[0];
+	myBIG_frame.whole_frame[33] = myBIG_frame.time_of_period[1];
+	myBIG_frame.whole_frame[34] = myBIG_frame.battery_voltage;
+	myBIG_frame.whole_frame[35] = myBIG_frame._CRC[0];
+	myBIG_frame.whole_frame[36] = myBIG_frame._CRC[1];
+	//Additional
+	myBIG_frame.whole_frame[37] = myBIG_frame.RSSI;
+	myBIG_frame.whole_frame[38] = myBIG_frame.LQI;
+
+}

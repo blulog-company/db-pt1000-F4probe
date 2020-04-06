@@ -116,7 +116,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		//if(!pt1000isOK)
 		//	usb_print("blad odczytu \r\n", DataToSend);
 		temp_ready = 1;
-		licznik_pomiarow++;
+
 
 	}
 }
@@ -208,25 +208,9 @@ int main(void)
 	newTemp = 0.0;
 	oldTemp = 0.0;
 	shift_register_init();
+	BIG_frame_initializer();
+	BIG_frame_rewrite();
 
-	shift_register_add(50.0);
-	shift_register_add(75.0);
-	shift_register_add(171.5);
-	shift_register_add(123.3);
-	shift_register_add(184.5);
-	shift_register_add(142.2);	//najnowszy pomiar
-
-	for(int i = 0; i < liczba_pomiarow_w_ramce; i++)
-	{
-		big_database_temperature_history_store(pomiary_shift_register[i]);
-	}
-
-	shift_register_add(67.6);
-	clear_BIG_database();
-	for(int i = 0; i < liczba_pomiarow_w_ramce; i++)
-	{
-		big_database_temperature_history_store(pomiary_shift_register[i]);
-	}
 
 	send_text_over_usb("main znacznik 1 \r\n", DataToSend);
 
@@ -257,14 +241,22 @@ int main(void)
 		  //send_text_over_usb("petla \r\n", DataToSend);
 		if(temp_ready)
 		{
+			licznik_pomiarow++;
 			pt1000Temp = Max31865_Filter(t,pt1000Temp,0.1);   //  << For Smoothing data
 			sprintf(DataToSend, "pomiar: %f \r\n", pt1000Temp);
 			CDC_Transmit_FS(DataToSend, strlen(DataToSend));
 			newTemp = pt1000Temp;
-
 			//database_temperature_history_store(pt1000Temp);
-			database_temperature_history_store(newTemp);
-			database_temperature_history_store(oldTemp);
+			if(licznik_pomiarow > 1)
+			{
+				database_temperatures_index = 0;
+				database_temperature_history_store(newTemp);
+				database_temperature_history_store(oldTemp);
+			}
+			else
+			{
+				database_temperature_history_store(newTemp);
+			}
 			cast_counter(licznik_pomiarow);
 			cast_period(period);
 			cast_temperature();
@@ -272,7 +264,7 @@ int main(void)
 			fill_CRC_buffer();
 			frame_CRC = crc16(my_frame.CRC_buffer, 14);
 			cast_CRC(frame_CRC);
-			frame_rewrite();;
+			frame_rewrite();
 
 			strcat(whole_frame_ascii,"JU0A");
 			for(int i = 0; i < 33; i++)
@@ -294,6 +286,37 @@ int main(void)
 				database_temperature_history_shift_left();
 				shift_left_order = 0;
 			}
+
+
+			//Dla dużej ramki
+			shift_register_add(pt1000Temp);
+			clear_BIG_database();
+			BIG_database_temperatures_index = 0;
+			for(int i = 0; i < liczba_pomiarow_w_ramce; i++)
+			{
+				big_database_temperature_history_store(pomiary_shift_register[i]);
+			}
+			BIG_cast_counter(licznik_pomiarow);
+			BIG_cast_period(period);
+			BIG_cast_temperature();
+			BIG_frame_rewrite();    //////<----
+			BIG_fill_CRC_buffer();
+			frame_CRC = crc16(myBIG_frame.CRC_buffer, 20);
+			BIG_cast_CRC(frame_CRC);
+			BIG_frame_rewrite();
+			strcat(whole_frame_ascii,"JU0A");
+			for(int i = 0; i < 39; i++)
+			{
+				if(myBIG_frame.whole_frame[i] < 0x10)
+				{
+					strcat(whole_frame_ascii,"0");
+				}
+				sprintf(one_hex_number, "%X", myBIG_frame.whole_frame[i]);
+				strcat(whole_frame_ascii,one_hex_number);
+			}
+			send_text_over_usb("  ", DataToSend);
+			CDC_Transmit_FS(whole_frame_ascii, strlen(whole_frame_ascii));
+			clear_buffer_(whole_frame_ascii);
 
 			oldTemp = newTemp;
 			temp_ready = 0;
