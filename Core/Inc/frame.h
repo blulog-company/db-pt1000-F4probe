@@ -24,6 +24,7 @@ uint16_t BIG_database_temperatures_index;		/* 0 means that next measurement will
 uint8_t shift_left_order;
 #define liczba_pomiarow_w_ramce 6
 float pomiary_shift_register[liczba_pomiarow_w_ramce];
+#define ID_HEX_address 0x080001C4
 
 void database_temperature_history_store(float temperature);
 void database_temperature_history_shift_left(void);
@@ -95,12 +96,14 @@ void frame_initializer();
 void cast_counter(uint32_t counter);
 void fill_CRC_buffer();
 void cast_CRC(uint16_t calculated_CRC);
+void get_ID_from_memory();
 
 void BIG_frame_initializer();
 void BIG_fill_CRC_buffer();
 void BIG_fill_CRC_buffer();
 void BIG_cast_CRC(uint16_t calculated_CRC);
 void BIG_cast_period(uint16_t period);
+void BIG_get_ID_from_memory();
 
 
 

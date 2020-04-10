@@ -469,7 +469,15 @@ void cast_temperature()
 	}
 }
 
-
+void get_ID_from_memory()
+{
+	uint8_t *handle = ID_HEX_address;
+	for(int i = 3; i >= 0; i--)
+	{
+		my_frame.ID[i] = *handle;
+		handle++;
+	}
+}
 
 void BIG_frame_initializer()
 {
@@ -563,6 +571,16 @@ void BIG_cast_period(uint16_t period)
 	myBIG_frame.time_of_period[0] = buffer8;
 	buffer8 = (uint8_t)(period);
 	myBIG_frame.time_of_period[1] = buffer8;
+}
+
+void BIG_get_ID_from_memory()
+{
+	uint8_t *handle = ID_HEX_address;
+	for(int i = 3; i >= 0; i--)
+	{
+		myBIG_frame.ID[i] = *handle;
+		handle++;
+	}
 }
 
 void BIG_frame_rewrite()

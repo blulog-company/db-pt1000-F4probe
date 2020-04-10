@@ -260,6 +260,7 @@ int main(void)
 			cast_counter(licznik_pomiarow);
 			cast_period(period);
 			cast_temperature();
+			get_ID_from_memory();
 			frame_rewrite();
 			fill_CRC_buffer();
 			frame_CRC = crc16(my_frame.CRC_buffer, 14);
@@ -299,6 +300,7 @@ int main(void)
 			BIG_cast_counter(licznik_pomiarow);
 			BIG_cast_period(period);
 			BIG_cast_temperature();
+			BIG_get_ID_from_memory();
 			BIG_frame_rewrite();    //////<----
 			BIG_fill_CRC_buffer();
 			frame_CRC = crc16(myBIG_frame.CRC_buffer, 20);
