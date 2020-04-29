@@ -167,10 +167,12 @@ void iToTwelveBits(int measurement, uint8_t *twelveBitsMeasurement, uint8_t *num
 	//tu go tylko ograniczam do 11 bitów, ale przy tych liczbach to nie powinno mieć znaczenia
     uint16_t t1 = measurement & 0x07FF;
 
+    /*
     HAL_Delay(100);
     sprintf(DataToPrint, " t1: %i", t1);
 	CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
 	clear_buffer_len(DataToPrint, 40);
+	*/
 
     /* Set bit 12 for "-" values */
 	//Dla ujemnych wartosci
@@ -188,10 +190,12 @@ void iToTwelveBits(int measurement, uint8_t *twelveBitsMeasurement, uint8_t *num
 
     int p = ((*numOfMeasurement)) * 1.5;
 
+    /*
     HAL_Delay(100);
 	sprintf(DataToPrint, " p: %i", p);
 	CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
 	clear_buffer_len(DataToPrint, 40);
+	*/
 
     if (*numOfMeasurement % 2 == 0)
     {
@@ -249,11 +253,14 @@ void iToTwelveBits(int measurement, uint8_t *twelveBitsMeasurement, uint8_t *num
 
     }
     //*numOfMeasurement += 1;
+
+    /*
     HAL_Delay(100);
 	strcpy(DataToPrint, " iToTwelveBits-bufor-temperatury:  ");
 	CDC_Transmit_FS(DataToPrint, strlen(DataToPrint));
 	HAL_Delay(100);
 	CDC_Transmit_FS(twelveBitsMeasurement, 3);
+	*/
 }
 
 /**
