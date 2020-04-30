@@ -220,7 +220,6 @@ int main(void)
 
 	HAL_Delay(200);
 	HAL_TIM_Base_Start_IT(&htim14);
-	HAL_TIM_Base_Start_IT(&htim7);
 
   /* USER CODE END 2 */
 
@@ -316,7 +315,12 @@ int main(void)
 			oldTemp = newTemp;
 			temp_ready = 0;
 		}
-		HAL_Delay(50);
+		//Przejscie w tryb uspienia. Wybudza pierwsze następujące przerwanie
+		HAL_SuspendTick();
+		HAL_PWR_EnterSLEEPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+		HAL_ResumeTick();
+
+
 	}
   /* USER CODE END 3 */
 }
